@@ -67,8 +67,8 @@
     <Color x:Key="DarkThemeBodyMediumColor">#F5F5F5</Color>
     <Color x:Key="DarkThemeInputBoxBackgroundColor">#353535</Color>
 
-    <SolidColorBrush x:Key="DarkThemeBodyMediumBrush" Color="{StaticResource DarkThemeBodyMediumColor}" />
-    <SolidColorBrush x:Key="DarkThemeInputBoxBackgroundBrush" Color="{StaticResource DarkThemeInputBoxBackgroundColor}" />
+    <SolidColorBrush x:Key="DarkThemeBodyMediumBrush" Color="{DynamicResource DarkThemeBodyMediumColor}" />
+    <SolidColorBrush x:Key="DarkThemeInputBoxBackgroundBrush" Color="{DynamicResource DarkThemeInputBoxBackgroundColor}" />
 
     <clr:Double x:Key="NodeNameHeight">53</clr:Double>
 
@@ -80,12 +80,11 @@
     <SolidColorBrush x:Key="InfoBubbleTextNormalBrush" Color="#333333" />
     <SolidColorBrush x:Key="InfoBubbleEdgeNormalBrush" Color="#999999" />
 
-    <!--  Not used  -->
-    <!--<LinearGradientBrush x:Key="MenuPopupBrush" StartPoint="0.5,0" EndPoint="0.5,1">
+    <LinearGradientBrush x:Key="MenuPopupBrush" StartPoint="0.5,0" EndPoint="0.5,1">
         <GradientStop Offset="0" Color="{DynamicResource ControlLightColor}" />
         <GradientStop Offset="0.5" Color="{DynamicResource ControlMediumColor}" />
         <GradientStop Offset="1" Color="{DynamicResource ControlLightColor}" />
-    </LinearGradientBrush>-->
+    </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="SpinnerNormalBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Offset="0.0" Color="#EEE" />
@@ -428,7 +427,6 @@
         </Setter>
     </Style>
 
-    <!--  Loaded static  -->
     <Style x:Key="PackageManagerSmallComboBox" TargetType="{x:Type ComboBox}">
         <Setter Property="SnapsToDevicePixels" Value="true" />
         <Setter Property="OverridesDefaultStyle" Value="true" />
@@ -441,7 +439,7 @@
         <Setter Property="MaxHeight" Value="40" />
         <Setter Property="FontSize" Value="10" />
         <Setter Property="Foreground" Value="#C7C7C7" />
-        <Setter Property="ItemContainerStyle" Value="{StaticResource PackageManagerComboBoxItemStyle}" />
+        <Setter Property="ItemContainerStyle" Value="{DynamicResource PackageManagerComboBoxItemStyle}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -1658,7 +1656,7 @@
                     <ControlTemplate.Triggers>
 
                         <Trigger Property="Button.IsMouseOver" Value="true">
-                            <Setter TargetName="shapeIcon" Property="Content" Value="{StaticResource HighlightShape}" />
+                            <Setter TargetName="shapeIcon" Property="Content" Value="{DynamicResource ResourceKey=HighlightShape}" />
                         </Trigger>
 
                         <Trigger Property="Button.IsPressed" Value="true">
@@ -3580,7 +3578,7 @@
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="menuIcon" Property="Fill" Value="{StaticResource BorderPressedColorBrush}" />
+                            <Setter TargetName="menuIcon" Property="Fill" Value="{DynamicResource BorderPressedColorBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value=".5" />
@@ -4068,7 +4066,7 @@
                                     BorderThickness="0">
                                 <ScrollViewer x:Name="SubMenuScrollViewer"
                                               CanContentScroll="true"
-                                              Style="{StaticResource {ComponentResourceKey ResourceId=MenuScrollViewer,
+                                              Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer,
                                                                                             TypeInTargetAssembly={x:Type FrameworkElement}}}">
                                     <Grid RenderOptions.ClearTypeHint="Enabled">
                                         <ItemsPresenter x:Name="ItemsPresenter"
@@ -4168,7 +4166,7 @@
                             <Border Background="{TemplateBinding Background}" BorderThickness="0">
                                 <ScrollViewer x:Name="SubMenuScrollViewer"
                                               CanContentScroll="true"
-                                              Style="{StaticResource {ComponentResourceKey ResourceId=MenuScrollViewer,
+                                              Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer,
                                                                                             TypeInTargetAssembly={x:Type FrameworkElement}}}">
                                     <Grid RenderOptions.ClearTypeHint="Enabled">
                                         <ItemsPresenter x:Name="ItemsPresenter"
@@ -5257,14 +5255,14 @@
                             BorderThickness="0">
                         <Canvas Margin="0,0,0,0">
                             <Line x:Name="line1"
-                                  Stroke="{StaticResource GenericMouseOverBackgroundColorBrush}"
+                                  Stroke="{DynamicResource GenericMouseOverBackgroundColorBrush}"
                                   StrokeThickness="1"
                                   X1="0"
                                   X2="13"
                                   Y1="0"
                                   Y2="13" />
                             <Line x:Name="line2"
-                                  Stroke="{StaticResource GenericMouseOverBackgroundColorBrush}"
+                                  Stroke="{DynamicResource GenericMouseOverBackgroundColorBrush}"
                                   StrokeThickness="1"
                                   X1="0"
                                   X2="13"
@@ -5290,10 +5288,10 @@
 
     <SolidColorBrush x:Key="Button.MouseOver.Border"
                      Opacity="0.15"
-                     Color="{StaticResource GenericMouseOverBackgroundColor}" />
+                     Color="{DynamicResource GenericMouseOverBackgroundColor}" />
     <SolidColorBrush x:Key="Button.Pressed.Border"
                      Opacity="0.25"
-                     Color="{StaticResource GenericMouseOverBackgroundColor}" />
+                     Color="{DynamicResource GenericMouseOverBackgroundColor}" />
     <Style x:Key="PoupButtonStyle" TargetType="{x:Type Button}">
         <Setter Property="MinWidth" Value="80" />
         <Setter Property="MaxHeight" Value="36" />
@@ -5339,7 +5337,7 @@
                 <ControlTemplate TargetType="{x:Type Button}">
                     <Border x:Name="PopupButtonBorder"
                             Background="{StaticResource PopupWhiteColor}"
-                            BorderBrush="{StaticResource GenericMouseOverBackgroundColorBrush}"
+                            BorderBrush="{DynamicResource GenericMouseOverBackgroundColorBrush}"
                             BorderThickness="1"
                             CornerRadius="2"
                             Opacity="0.5">
@@ -5580,7 +5578,7 @@
                                     BorderThickness="0">
                                 <ScrollViewer x:Name="SubMenuScrollViewer"
                                               CanContentScroll="true"
-                                              Style="{StaticResource {ComponentResourceKey ResourceId=MenuScrollViewer,
+                                              Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer,
                                                                                             TypeInTargetAssembly={x:Type FrameworkElement}}}">
                                     <Grid RenderOptions.ClearTypeHint="Enabled">
                                         <ItemsPresenter x:Name="ItemsPresenter"
@@ -6471,21 +6469,9 @@
         </Canvas>
     </ControlTemplate>
 
-    <!--  PackageVersion DataGridColumnHeader style  -->
-    <Style x:Key="ColumnHeaderStyle1" TargetType="{x:Type DataGridColumnHeader}">
-        <Setter Property="Background" Value="{StaticResource PMHeaderBackgroundColorBrush}" />
-        <Setter Property="BorderThickness" Value="0,0,1,1" />
-        <Setter Property="BorderBrush" Value="{StaticResource DarkMidGreyBrush}" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Padding" Value="4,8" />
-        <Setter Property="UseLayoutRounding" Value="True" />
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-
-    </Style>
-    
     <!--  PackageVersion DataGrid style  -->
     <Style x:Key="DataGridStyle1" TargetType="{x:Type DataGrid}">
-        <Setter Property="ColumnHeaderStyle" Value="{StaticResource ColumnHeaderStyle1}" />
+        <Setter Property="ColumnHeaderStyle" Value="{DynamicResource ColumnHeaderStyle1}" />
         <Setter Property="RowStyle" Value="{x:Null}" />
         <Setter Property="FontFamily" Value="{StaticResource ArtifaktElementRegular}" />
         <Setter Property="CellStyle" Value="{DynamicResource CellStyle1}" />
@@ -6499,7 +6485,17 @@
         <Setter Property="SnapsToDevicePixels" Value="True" />
     </Style>
 
+    <!--  PackageVersion DataGridColumnHeader style  -->
+    <Style x:Key="ColumnHeaderStyle1" TargetType="{x:Type DataGridColumnHeader}">
+        <Setter Property="Background" Value="{StaticResource PMHeaderBackgroundColorBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,1,1" />
+        <Setter Property="BorderBrush" Value="{StaticResource DarkMidGreyBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="4,8" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
 
+    </Style>
 
     <!--  PackageVersion DataGridRow style  -->
     <Style BasedOn="{StaticResource {x:Type DataGridRow}}" TargetType="DataGridRow">
