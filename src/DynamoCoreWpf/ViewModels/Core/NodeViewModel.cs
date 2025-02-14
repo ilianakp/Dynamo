@@ -22,7 +22,6 @@ using Dynamo.Models;
 using Dynamo.Selection;
 using Dynamo.Wpf.ViewModels.Core;
 using Newtonsoft.Json;
-using VirtualCanvasDemo.Interfaces;
 using Point = System.Windows.Point;
 using Size = System.Windows.Size;
 
@@ -32,7 +31,7 @@ namespace Dynamo.ViewModels
     /// Interaction logic for dynControl.xaml
     /// </summary>
 
-    public partial class NodeViewModel : ViewModelBase, INotifyPropertyChanged, ISpatialItem
+    public partial class NodeViewModel : ViewModelBase
     {
         #region delegates
         public delegate void SetToolTipDelegate(string message);
@@ -64,7 +63,6 @@ namespace Dynamo.ViewModels
         private bool isNodeInCollapsedGroup = false;
         private const string WatchNodeName = "Watch";
         private bool nodeHoveringState;
-        private bool isVisibleOnCanvas = true;
         #endregion
 
         #region public members
@@ -307,7 +305,6 @@ namespace Dynamo.ViewModels
             {
                 nodeLogic.X = value;
                 RaisePropertyChanged("Left");
-                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
@@ -322,39 +319,8 @@ namespace Dynamo.ViewModels
             {
                 nodeLogic.Y = value;
                 RaisePropertyChanged("Top");
-                RaisePropertyChanged(nameof(Bounds));
             }
         }
-
-        public double Width
-        {
-            get { return NodeModel.Width; }
-        }
-
-        public double Height
-        {
-            get { return NodeModel.Height; }
-        }
-
-        #region ISpatialItem Implementation
-        public object DataItem { get { return this; } }
-
-        public void OnMeasure(UIElement uiElement)
-        {
-            //NotImplementedException.
-        }
-
-        public Rect Bounds
-        {
-            get
-            {
-                return new Rect(Left, Top, Width, Height);
-            }
-        }
-
-        public double Priority { get { return ZIndex; } }
-
-        #endregion
 
         /// <summary>
         /// ZIndex is used to order nodes, when some node is clicked.
@@ -390,20 +356,6 @@ namespace Dynamo.ViewModels
         public bool IsInteractionEnabled
         {
             get { return true; }
-        }
-
-        [JsonIgnore]
-        public bool IsVisibleOnCanvas
-        {
-            get { return isVisibleOnCanvas; }
-            set
-            {
-                if (isVisibleOnCanvas != value)
-                {
-                   isVisibleOnCanvas = value;
-                    RaisePropertyChanged(nameof(IsVisibleOnCanvas));
-                }
-            }
         }
 
         [JsonProperty("ShowGeometry", Order = 6)]
