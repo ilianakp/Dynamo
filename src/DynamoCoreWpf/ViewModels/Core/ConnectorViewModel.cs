@@ -17,12 +17,14 @@ using Dynamo.UI.Commands;
 using Dynamo.Utilities;
 using DynCmd = Dynamo.Models.DynamoModel;
 using Point = System.Windows.Point;
+using VirtualCanvasDemo.Interfaces;
+using System.Windows;
 
 namespace Dynamo.ViewModels
 {
     public enum PreviewState { Selection, ExecutionPreview, Hover, None }
 
-    public partial class ConnectorViewModel : ViewModelBase
+    public partial class ConnectorViewModel : ViewModelBase, INotifyPropertyChanged, ISpatialItem
     {
 
         #region Properties
@@ -54,6 +56,8 @@ namespace Dynamo.ViewModels
         private Point curvePoint1;
         private Point curvePoint2;
         private Point curvePoint3;
+
+        private bool isVisibleOnCanvas = true;
 
         /// <summary>
         /// Required timer for desired delay prior to ' connector anchor' display.
@@ -346,7 +350,7 @@ namespace Dynamo.ViewModels
         //Changed the connectors ZIndex to 2. Groups have ZIndex of 1.
         // 08/02/2021 - ZIndex to 3 as groups can now have grouped groups
         // and they will have a ZIndex of 2
-        public double ZIndex
+        public int ZIndex
         {
             get 
             {
@@ -579,6 +583,89 @@ namespace Dynamo.ViewModels
                 RaisePropertyChanged(nameof(DynamicStrokeThickness));
             }
         }
+
+        public double Width
+        {
+            get
+            {
+                if (model == null)
+                    return 0;
+
+                var startPoint = new Point(model.Start.Center.X, model.Start.Center.Y);
+                var endPoint = new Point(model.End.Center.X, model.End.Center.Y);
+
+                return Math.Abs(endPoint.X - startPoint.X);
+            }
+        }
+
+        public double Height
+        {
+            get
+            {
+                if (model == null)
+                    return 0;
+
+                var startPoint = new Point(model.Start.Center.X, model.Start.Center.Y);
+                var endPoint = new Point(model.End.Center.X, model.End.Center.Y);
+
+                return Math.Abs(endPoint.Y - startPoint.Y);
+            }
+        }
+
+        public double X
+        {
+            get
+            {
+                if (model == null)
+                    return 0;
+
+                return model.Start.Center.X;
+            }
+        }
+
+        public double Y
+        {
+            get
+            {
+                if (model == null)
+                    return 0;
+
+                return model.Start.Center.Y;
+            }
+        }
+        #region ISpatialItem implementation
+
+        public object DataItem { get { return this; } }
+
+        public void OnMeasure(UIElement uiElement)
+        {
+            //NotImplementedException.
+        }
+
+        public Rect Bounds
+        {
+            get
+            {
+                return new Rect(X, Y, Width, Height);
+            }
+        }
+
+        public bool IsVisibleOnCanvas
+        {
+            get { return isVisibleOnCanvas; }
+            set
+            {
+                if (isVisibleOnCanvas != value)
+                {
+                    isVisibleOnCanvas = value;
+                    RaisePropertyChanged(nameof(IsVisibleOnCanvas));
+                }
+            }
+        }
+
+        public double Priority { get { return ZIndex; } }
+
+        #endregion
 
         #endregion
 

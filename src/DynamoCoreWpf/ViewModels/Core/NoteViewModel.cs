@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using Dynamo.Configuration;
 using Dynamo.Graph;
@@ -12,11 +14,12 @@ using Dynamo.Selection;
 using Dynamo.Utilities;
 using Dynamo.Wpf.ViewModels.Core;
 using Newtonsoft.Json;
+using VirtualCanvasDemo.Interfaces;
 using DynCmd = Dynamo.Models.DynamoModel;
 
 namespace Dynamo.ViewModels
 {
-    public partial class NoteViewModel : ViewModelBase
+    public partial class NoteViewModel : ViewModelBase, INotifyPropertyChanged, ISpatialItem
     {
         private int DISTANCE_TO_PINNED_NODE = 16;
         private int DISTANCE_TO_PINNED_NODE_WITH_WARNING = 64;
@@ -43,6 +46,8 @@ namespace Dynamo.ViewModels
         private int zIndex = Configurations.NodeStartZIndex; // initialize the start Z-Index of a note to the same as that of a node
         internal static int StaticZIndex = Configurations.NodeStartZIndex;
 
+        private bool isVisibleOnCanvas = true;
+
         [JsonIgnore]
         public NoteModel Model
         {
@@ -65,6 +70,7 @@ namespace Dynamo.ViewModels
             {
                 _model.X = value;
                 RaisePropertyChanged("Left");
+                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
@@ -79,9 +85,51 @@ namespace Dynamo.ViewModels
             {
                 _model.Y = value;
                 RaisePropertyChanged("Top");
+                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
+        public double Width
+        {
+            get { return Model.Width; }
+        }
+        public double Height
+        {
+            get { return Model.Height; }
+        }
+        #region ISpatialItem implementation
+
+        public object DataItem { get { return this; } }
+
+        public void OnMeasure(UIElement uiElement)
+        {
+            //NotImplementedException.
+        }
+
+        public Rect Bounds
+        {
+            get
+            {
+                return new Rect(Left, Top, Width, Height);
+            }
+        }
+
+        public bool IsVisibleOnCanvas
+        {
+            get { return isVisibleOnCanvas; }
+            set
+            {
+                if (isVisibleOnCanvas != value)
+                {
+                    isVisibleOnCanvas = value;
+                    RaisePropertyChanged(nameof(IsVisibleOnCanvas));
+                }
+            }
+        }
+
+        public double Priority { get { return ZIndex; } }
+
+        #endregion
         /// <summary>
         /// ZIndex represents the order on the z-plane in which the notes and other objects appear. 
         /// </summary>

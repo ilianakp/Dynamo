@@ -17,10 +17,13 @@ using Dynamo.Utilities;
 using DynamoUtilities;
 using Newtonsoft.Json;
 using Color = System.Windows.Media.Color;
+using VirtualCanvasDemo.Interfaces;
+using System.ComponentModel;
+using System.Windows;
 
 namespace Dynamo.ViewModels
 {
-    public class AnnotationViewModel : ViewModelBase
+    public class AnnotationViewModel : ViewModelBase, INotifyPropertyChanged, ISpatialItem
     {
         private AnnotationModel annotationModel;
         private IEnumerable<PortModel> originalInPorts;
@@ -32,6 +35,7 @@ namespace Dynamo.ViewModels
         private ObservableCollection<Dynamo.Configuration.StyleItem> groupStyleList;
         private IEnumerable<Configuration.StyleItem> preferencesStyleItemsList;
         private PreferenceSettings preferenceSettings;
+        private bool isVisibleOnCanvas = true;
 
         public readonly WorkspaceViewModel WorkspaceViewModel;
 
@@ -54,6 +58,7 @@ namespace Dynamo.ViewModels
             set
             {
                 annotationModel.Width = value;
+                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
@@ -64,6 +69,7 @@ namespace Dynamo.ViewModels
             set
             {
                 annotationModel.Height = value;
+                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
@@ -84,6 +90,8 @@ namespace Dynamo.ViewModels
             set
             {
                 annotationModel.Y = value;
+                RaisePropertyChanged("Top");
+                RaisePropertyChanged(nameof(Bounds));
             }
         }
 
@@ -91,11 +99,50 @@ namespace Dynamo.ViewModels
         public Double Left
         {
             get { return annotationModel.X; }
-            set { annotationModel.X = value; }
+            set
+            {
+                annotationModel.X = value;
+                RaisePropertyChanged("Left");
+                RaisePropertyChanged(nameof(Bounds));
+            }
         }
 
+        #region ISpatialItem implementation
+
+        public object DataItem { get { return this; } }
+
+        public void OnMeasure(UIElement uiElement)
+        {
+            //NotImplementedException.
+        }
+
+        public Rect Bounds
+        {
+            get
+            {
+                return new Rect(Left, Top, Width, Height);
+            }
+        }
+
+        public bool IsVisibleOnCanvas
+        {
+            get { return isVisibleOnCanvas; }
+            set
+            {
+                if (isVisibleOnCanvas != value)
+                {
+                    isVisibleOnCanvas = value;
+                    RaisePropertyChanged(nameof(IsVisibleOnCanvas));
+                }
+            }
+        }
+
+        public double Priority { get { return ZIndex; } }
+
+        #endregion
+
         [JsonIgnore]
-        public double ZIndex
+        public int ZIndex
         {
             get
             {
