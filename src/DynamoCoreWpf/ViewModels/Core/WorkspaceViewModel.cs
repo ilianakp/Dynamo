@@ -661,14 +661,9 @@ namespace Dynamo.ViewModels
             foreach (var note in Notes) SpatialItems.Add(note);
         }
 
-        public void UpdateSpatialItemsVisibility(double visibleWidth, double visibleHeight)
+        public void UpdateSpatialItemsVisibility(Rect bounds)
         {
-            var width = visibleWidth / Zoom;
-            var height = visibleHeight / Zoom;
-            var left = -X / Zoom;
-            var top = -Y / Zoom;
-            var visibleRect = new Rect(left, top, width, height);
-            var itemsToRealize = SpatialItems.Where(item => visibleRect.IntersectsWith(item.Bounds)).ToList();
+            var itemsToRealize = SpatialItems.Where(item => bounds.IntersectsWith(item.Bounds)).ToList();
             _virtualCanvas.RealizeItems(itemsToRealize);
         }
 
