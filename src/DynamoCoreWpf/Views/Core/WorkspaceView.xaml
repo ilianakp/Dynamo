@@ -8,7 +8,7 @@
              xmlns:views="clr-namespace:Dynamo.Views"
              xmlns:viewmodels="clr-namespace:Dynamo.ViewModels"
              xmlns:p="clr-namespace:Dynamo.Wpf.Properties"
-             xmlns:VirtualCanvas="clr-namespace:VirtualCanvasDemo;assembly=VirtualCanvas"
+             xmlns:vc="clr-namespace:VirtualCanvasDemo;assembly=VirtualCanvas"
              mc:Ignorable="d"
              d:DesignHeight="300"
              d:DesignWidth="300"
@@ -149,47 +149,10 @@
                          RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type TabControl}}" />
             </controls:ZoomBorder.IsHitTestVisible>
 
-            <ItemsControl Name="WorkspaceElements"
-                          ItemsSource="{Binding WorkspaceElements}">
-
-                <!--Resources for the ItemsControl can now be found in DataTemplates.xml-->
-
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <controls:DragCanvas x:Name="DragCanvas"
-                                             UseLayoutRounding="True"
-                                             Width="0"
-                                             Height="0"
-                                             HorizontalAlignment="Left"
-                                             VerticalAlignment="Top"
-                                             Visibility="Visible"
-                                             Loaded="workBench_OnLoaded"
-                                             IsItemsHost="True">
-                            <Canvas.Background>
-                                <SolidColorBrush Color="Transparent" />
-                            </Canvas.Background>
-                            <Canvas.Opacity>
-                                <Binding Path="DataContext.BackgroundPreviewViewModel.CanNavigateBackground"
-                                         RelativeSource="{RelativeSource FindAncestor, AncestorType={x:Type controls:DynamoView}}"
-                                         Converter="{StaticResource NavigationToOpacityConverter}">
-                                </Binding>
-                            </Canvas.Opacity>
-                        </controls:DragCanvas>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="ContentPresenter">
-                        <Setter Property="Canvas.Left"
-                                Value="{Binding Left}" />
-                        <Setter Property="Canvas.Top"
-                                Value="{Binding Top}" />
-                        <Setter Property="Panel.ZIndex"
-                                Value="{Binding ZIndex}" />
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
-
-            </ItemsControl>
+            <vc:VirtualCanvas x:Name="workBench"
+                          ItemsSource="{Binding SpatialItems}"
+                          Background="{StaticResource WorkspaceBackgroundBrush}"
+                          ItemTemplate="{StaticResource NodeTemplate}" />
 
         </controls:ZoomBorder>
 

@@ -28,6 +28,7 @@ using Dynamo.ViewModels;
 using Dynamo.Wpf.UI;
 using Dynamo.Wpf.Utilities;
 using ModifierKeys = System.Windows.Input.ModifierKeys;
+using VirtualCanvasDemo.Controls;
 
 namespace Dynamo.Views
 {
@@ -55,7 +56,7 @@ namespace Dynamo.Views
             ResizeHorizontal
         }
 
-        private DragCanvas workBench;
+        private VirtualCanvas workBench;
         private readonly DataTemplate draggedSelectionTemplate;
         private DraggedAdorner draggedAdorner;
         private object draggedData;
@@ -96,7 +97,9 @@ namespace Dynamo.Views
             Resources.MergedDictionaries.Add(SharedDictionaryManager.ConnectorsDictionary);
 
             InitializeComponent();
-
+            workBench = new VirtualCanvas();
+            workBench.VisualFactory = new WorkspaceVisualFactory();
+            zoomBorder.Child = workBench;
             DataContextChanged += OnWorkspaceViewDataContextChanged;
 
             // view of items to drag
@@ -149,6 +152,7 @@ namespace Dynamo.Views
             ViewModel.Model.CurrentOffsetChanged -= vm_CurrentOffsetChanged;
             DynamoSelection.Instance.Selection.CollectionChanged -= OnSelectionCollectionChanged;
             infiniteGridView.DetachFromZoomBorder(zoomBorder);
+            zoomBorder.ViewSettingsChanged -= CallUpdateSpatialElementVisibility;
         }
 
         /// <summary>
@@ -178,6 +182,20 @@ namespace Dynamo.Views
             ViewModel.Model.CurrentOffsetChanged += vm_CurrentOffsetChanged;
             DynamoSelection.Instance.Selection.CollectionChanged += OnSelectionCollectionChanged;
             infiniteGridView.AttachToZoomBorder(zoomBorder);
+            zoomBorder.ViewSettingsChanged += CallUpdateSpatialElementVisibility;
+        }
+
+        private void CallUpdateSpatialElementVisibility(ViewSettingsChangedEventArgs _) => UpdateSpatialElementVisibility();
+        private void UpdateSpatialElementVisibility()
+        {
+            double visibleWidth = outerCanvas?.ActualWidth ?? 0;
+            double visibleHeight = outerCanvas?.ActualHeight ?? 0;
+            if (visibleWidth <= 0 || visibleHeight <= 0)
+            {
+                return;
+            }
+
+            ViewModel.UpdateSpatialItemsVisibility(visibleWidth, visibleHeight);
         }
 
         private void ShowHideNodeAutoCompleteControl(ShowHideFlags flag)
@@ -504,6 +522,11 @@ namespace Dynamo.Views
                 AttachViewModelsubscriptions(ViewModel);
                 ViewModel.Loaded();
             }
+
+            if (DataContext is WorkspaceViewModel viewModel)
+            {
+                viewModel.SetVirtualCanvas(workBench);
+            }
         }
 
         private void VmOnWorkspacePropertyEditRequested(WorkspaceModel workspace)
@@ -784,6 +807,18 @@ namespace Dynamo.Views
             {
                 node.PreviewControl.HidePreviewBubble();
             }
+
+            if (ViewModel.HandleLeftButtonDown(workBench, e))
+            {
+                workBench.CaptureMouse();
+            }
+        }
+        private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (workBench.IsMouseCaptured)
+            {
+                workBench.ReleaseMouseCapture();
+            }
         }
 
         /// <summary>
@@ -850,69 +885,71 @@ namespace Dynamo.Views
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
+            ViewModel.HandleMouseMove(workBench, e);
+
             this.snappedPort = null;
 
-            bool mouseMessageHandled = false;
+            //bool mouseMessageHandled = false;
 
-            // If we are currently connecting and there is an active 
-            // connector, redraw it to match the new mouse coordinates.
-            if (ViewModel.IsSnapping)
-            {
-                if (ViewModel.portViewModel != null)
-                {
-                    if (ViewModel.CheckActiveConnectorCompatibility(ViewModel.portViewModel))
-                    {
-                        mouseMessageHandled = true;
-                        ViewModel.HandleMouseMove(workBench, ViewModel.portViewModel.Center);
-                    }
-                }
-                else
-                    ViewModel.CurrentCursor = CursorLibrary.GetCursor(CursorSet.ArcSelect);
-            }
+            //// If we are currently connecting and there is an active 
+            //// connector, redraw it to match the new mouse coordinates.
+            //if (ViewModel.IsSnapping)
+            //{
+            //    if (ViewModel.portViewModel != null)
+            //    {
+            //        if (ViewModel.CheckActiveConnectorCompatibility(ViewModel.portViewModel))
+            //        {
+            //            mouseMessageHandled = true;
+            //            ViewModel.HandleMouseMove(workBench, ViewModel.portViewModel.Center);
+            //        }
+            //    }
+            //    else
+            //        ViewModel.CurrentCursor = CursorLibrary.GetCursor(CursorSet.ArcSelect);
+            //}
 
-            if (ViewModel.IsInIdleState)
-            {
-                // Find the dependency object directly under the mouse 
-                // cursor, then see if it represents a port. If it does,
-                // then determine its type, we would like to show the 
-                // "ArcRemoving" cursor when the mouse is over an out port.
-                Point mouse = e.GetPosition((UIElement)sender);
-                var dependencyObject = ElementUnderMouseCursor(mouse);
-                PortViewModel pvm = PortFromHitTestResult(dependencyObject);
+            //if (ViewModel.IsInIdleState)
+            //{
+            //    // Find the dependency object directly under the mouse 
+            //    // cursor, then see if it represents a port. If it does,
+            //    // then determine its type, we would like to show the 
+            //    // "ArcRemoving" cursor when the mouse is over an out port.
+            //    Point mouse = e.GetPosition((UIElement)sender);
+            //    var dependencyObject = ElementUnderMouseCursor(mouse);
+            //    PortViewModel pvm = PortFromHitTestResult(dependencyObject);
 
-                if (null != pvm && (pvm.PortType == PortType.Input))
-                    this.Cursor = CursorLibrary.GetCursor(CursorSet.ArcSelect);
-                else
-                    this.Cursor = null;
-            }
+            //    if (null != pvm && (pvm.PortType == PortType.Input))
+            //        this.Cursor = CursorLibrary.GetCursor(CursorSet.ArcSelect);
+            //    else
+            //        this.Cursor = null;
+            //}
 
-            // If selection is going to be dragged and ctrl is pressed.
-            if (ViewModel.IsDragging && Keyboard.Modifiers == ModifierKeys.Control)
-            {
-                var currentMousePosition = e.GetPosition(null);
+            //// If selection is going to be dragged and ctrl is pressed.
+            //if (ViewModel.IsDragging && Keyboard.Modifiers == ModifierKeys.Control)
+            //{
+            //    var currentMousePosition = e.GetPosition(null);
 
-                // Set initialMousePosition here, so that we can use it in OnDragOver.
-                initialMousePosition = e.GetPosition(WorkspaceElements);
+            //    // Set initialMousePosition here, so that we can use it in OnDragOver.
+            //    initialMousePosition = e.GetPosition(WorkspaceElements);
 
-                // Check that current mouse position is far enough from start position.
-                var canDrag =
-                    (Math.Abs(currentMousePosition.X - startMousePosition.X) >
-                     SystemParameters.MinimumHorizontalDragDistance) &&
-                    (Math.Abs(currentMousePosition.Y - startMousePosition.Y) >
-                     SystemParameters.MinimumVerticalDragDistance) &&
-                    e.OriginalSource is DragCanvas;
+            //    // Check that current mouse position is far enough from start position.
+            //    var canDrag =
+            //        (Math.Abs(currentMousePosition.X - startMousePosition.X) >
+            //         SystemParameters.MinimumHorizontalDragDistance) &&
+            //        (Math.Abs(currentMousePosition.Y - startMousePosition.Y) >
+            //         SystemParameters.MinimumVerticalDragDistance) &&
+            //        e.OriginalSource is DragCanvas;
 
-                if (canDrag)
-                {
-                    DragAndDrop(e.GetPosition(WorkspaceElements));
-                    mouseMessageHandled = true;
-                }
-            }
+            //    if (canDrag)
+            //    {
+            //        DragAndDrop(e.GetPosition(WorkspaceElements));
+            //        mouseMessageHandled = true;
+            //    }
+            //}
 
-            if (!mouseMessageHandled)
-            {
-                ViewModel.HandleMouseMove(workBench, e);
-            }
+            //if (!mouseMessageHandled)
+            //{
+            //    ViewModel.HandleMouseMove(workBench, e);
+            //}
         }
 
         /// <summary>
@@ -1034,8 +1071,8 @@ namespace Dynamo.Views
 
         private void workBench_OnLoaded(object sender, RoutedEventArgs e)
         {
-            workBench = sender as DragCanvas;
-            workBench.owningWorkspace = this;
+            workBench = sender as VirtualCanvas;
+            //workBench.owningWorkspace = this;
         }
 
         private PortViewModel PortFromHitTestResult(DependencyObject depObject)
