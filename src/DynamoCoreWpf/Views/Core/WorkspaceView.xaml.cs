@@ -56,7 +56,7 @@ namespace Dynamo.Views
             ResizeHorizontal
         }
 
-        private VirtualCanvas workBench;
+        public  VirtualCanvas workBench;
         private readonly DataTemplate draggedSelectionTemplate;
         private DraggedAdorner draggedAdorner;
         private object draggedData;
