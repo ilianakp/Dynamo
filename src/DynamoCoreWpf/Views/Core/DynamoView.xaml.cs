@@ -943,7 +943,7 @@ namespace Dynamo.Controls
                 // If mouse is over workspace, paste copies under mouse cursor.
                 if (workspace.IsMouseOver)
                 {
-                    dynamoViewModel.Model.Paste(Mouse.GetPosition(workspace.WorkspaceElements).AsDynamoType(), false);
+                    dynamoViewModel.Model.Paste(Mouse.GetPosition(workspace.workBench).AsDynamoType(), false);
                 }
                 else // If mouse is out of workspace view, then paste copies at the center.
                 {

@@ -28,6 +28,7 @@ using Dynamo.ViewModels;
 using Dynamo.Wpf.UI;
 using Dynamo.Wpf.Utilities;
 using ModifierKeys = System.Windows.Input.ModifierKeys;
+using VirtualCanvasDemo.Controls;
 
 namespace Dynamo.Views
 {
@@ -55,7 +56,7 @@ namespace Dynamo.Views
             ResizeHorizontal
         }
 
-        private DragCanvas workBench;
+        public  VirtualCanvas workBench;
         private readonly DataTemplate draggedSelectionTemplate;
         private DraggedAdorner draggedAdorner;
         private object draggedData;
@@ -96,7 +97,9 @@ namespace Dynamo.Views
             Resources.MergedDictionaries.Add(SharedDictionaryManager.ConnectorsDictionary);
 
             InitializeComponent();
-
+            workBench = new VirtualCanvas();
+            workBench.VisualFactory = new WorkspaceVisualFactory();
+            zoomBorder.Child = workBench;
             DataContextChanged += OnWorkspaceViewDataContextChanged;
 
             // view of items to drag
@@ -149,6 +152,7 @@ namespace Dynamo.Views
             ViewModel.Model.CurrentOffsetChanged -= vm_CurrentOffsetChanged;
             DynamoSelection.Instance.Selection.CollectionChanged -= OnSelectionCollectionChanged;
             infiniteGridView.DetachFromZoomBorder(zoomBorder);
+            zoomBorder.ViewSettingsChanged -= CallUpdateSpatialElementVisibility;
         }
 
         /// <summary>
@@ -178,6 +182,15 @@ namespace Dynamo.Views
             ViewModel.Model.CurrentOffsetChanged += vm_CurrentOffsetChanged;
             DynamoSelection.Instance.Selection.CollectionChanged += OnSelectionCollectionChanged;
             infiniteGridView.AttachToZoomBorder(zoomBorder);
+            zoomBorder.ViewSettingsChanged += CallUpdateSpatialElementVisibility;
+        }
+
+        private void CallUpdateSpatialElementVisibility(ViewSettingsChangedEventArgs _) => UpdateSpatialElementVisibility();
+        private void UpdateSpatialElementVisibility()
+        {
+            Rect bounds = GetVisibleBounds();
+
+            ViewModel.UpdateSpatialItemsVisibility(bounds);
         }
 
         private void ShowHideNodeAutoCompleteControl(ShowHideFlags flag)
@@ -311,13 +324,13 @@ namespace Dynamo.Views
             var x = outerCanvas.ActualWidth / 2.0;
             var y = outerCanvas.ActualHeight / 2.0;
             var centerPt = new Point(x, y);
-            var transform = outerCanvas.TransformToDescendant(WorkspaceElements);
+            var transform = outerCanvas.TransformToDescendant(workBench);
             return transform.Transform(centerPt);
         }
 
         internal Rect GetVisibleBounds()
         {
-            var t = outerCanvas.TransformToDescendant(WorkspaceElements);
+            var t = outerCanvas.TransformToDescendant(workBench);
             var topLeft = t.Transform(new Point());
             var bottomRight = t.Transform(new Point(outerCanvas.ActualWidth, outerCanvas.ActualHeight));
             return new Rect(topLeft, bottomRight);
@@ -396,15 +409,15 @@ namespace Dynamo.Views
                 bounds.Width = 20 + ((((int)Math.Ceiling(bounds.Width)) + 1) & ~0x01);
                 bounds.Height = 20 + ((((int)Math.Ceiling(bounds.Height)) + 1) & ~0x01);
 
-                var currentTransformGroup = WorkspaceElements.RenderTransform as TransformGroup;
-                WorkspaceElements.RenderTransform = new TranslateTransform(10.0 - bounds.X - minX, 10.0 - bounds.Y - minY);
-                WorkspaceElements.UpdateLayout();
+                var currentTransformGroup = workBench.RenderTransform as TransformGroup;
+                workBench.RenderTransform = new TranslateTransform(10.0 - bounds.X - minX, 10.0 - bounds.Y - minY);
+                workBench.UpdateLayout();
 
                 rtb = new RenderTargetBitmap(((int)bounds.Width),
                     ((int)bounds.Height), 96, 96, PixelFormats.Default);
 
-                rtb.Render(WorkspaceElements);
-                WorkspaceElements.RenderTransform = currentTransformGroup;
+                rtb.Render(workBench);
+                workBench.RenderTransform = currentTransformGroup;
             }
             catch (Exception)
             {
@@ -503,6 +516,11 @@ namespace Dynamo.Views
                 // Adding registration of event listener
                 AttachViewModelsubscriptions(ViewModel);
                 ViewModel.Loaded();
+            }
+
+            if (DataContext is WorkspaceViewModel viewModel)
+            {
+                viewModel.SetVirtualCanvas(workBench);
             }
         }
 
@@ -784,6 +802,18 @@ namespace Dynamo.Views
             {
                 node.PreviewControl.HidePreviewBubble();
             }
+
+            if (ViewModel.HandleLeftButtonDown(workBench, e))
+            {
+                workBench.CaptureMouse();
+            }
+        }
+        private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (workBench.IsMouseCaptured)
+            {
+                workBench.ReleaseMouseCapture();
+            }
         }
 
         /// <summary>
@@ -850,6 +880,8 @@ namespace Dynamo.Views
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
+            ViewModel.HandleMouseMove(workBench, e);
+
             this.snappedPort = null;
 
             bool mouseMessageHandled = false;
@@ -972,13 +1004,13 @@ namespace Dynamo.Views
 
         protected override void OnDragOver(DragEventArgs e)
         {
-            var currentPosition = e.GetPosition(WorkspaceElements);
+            var currentPosition = e.GetPosition(workBench);
             // create adorner if it is necessary
             if (draggedAdorner == null)
             {
-                var adornerLayer = AdornerLayer.GetAdornerLayer(WorkspaceElements);
+                var adornerLayer = AdornerLayer.GetAdornerLayer(workBench);
                 draggedAdorner = new DraggedAdorner(draggedData,
-                    draggedSelectionTemplate, WorkspaceElements, adornerLayer);
+                    draggedSelectionTemplate, workBench, adornerLayer);
             }
 
             var zoom = ViewModel.Zoom;
@@ -993,8 +1025,8 @@ namespace Dynamo.Views
             // compute bounds of dragged content so that it does not go outside dragged canvas
             var x1 = -ViewModel.Model.X / zoom - xOffset;
             var y1 = -ViewModel.Model.Y / zoom - yOffset;
-            var x2 = WorkspaceElements.RenderSize.Width / zoom;
-            var y2 = WorkspaceElements.RenderSize.Height / zoom;
+            var x2 = workBench.RenderSize.Width / zoom;
+            var y2 = workBench.RenderSize.Height / zoom;
             var bounds = new Rect(x1, y1, x2, y2);
             draggedAdorner.SetPosition(x, y, bounds);
         }
@@ -1034,8 +1066,8 @@ namespace Dynamo.Views
 
         private void workBench_OnLoaded(object sender, RoutedEventArgs e)
         {
-            workBench = sender as DragCanvas;
-            workBench.owningWorkspace = this;
+            workBench = sender as VirtualCanvas;
+            //workBench.owningWorkspace = this;
         }
 
         private PortViewModel PortFromHitTestResult(DependencyObject depObject)
@@ -1070,7 +1102,7 @@ namespace Dynamo.Views
         private void OnWorkspaceDrop(object sender, DragEventArgs e)
         {
 
-            var mousePosition = e.GetPosition(WorkspaceElements);
+            var mousePosition = e.GetPosition(workBench);
             var pointObj = e.Data.GetData(typeof(Point2D));
             if (pointObj is Point2D)
             {
@@ -1135,7 +1167,7 @@ namespace Dynamo.Views
         /// </summary>
         private void OnCanvasClicked(object sender, MouseButtonEventArgs e)
         {
-            inCanvasSearchPosition = Mouse.GetPosition(this.WorkspaceElements);
+            inCanvasSearchPosition = Mouse.GetPosition(this.workBench);
         }
 
         private void OnContextMenuOpened(object sender, EventArgs e)

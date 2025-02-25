@@ -29,6 +29,8 @@ using DynamoUtilities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ViewModels.Core;
+using VirtualCanvasDemo.Controls;
+using VirtualCanvasDemo.Interfaces;
 using Function = Dynamo.Graph.Nodes.CustomNodes.Function;
 
 namespace Dynamo.ViewModels
@@ -206,6 +208,9 @@ namespace Dynamo.ViewModels
 
         [JsonIgnore]
         public bool IsSnapping { get; set; }
+
+        public List<ISpatialItem> SpatialItems { get; private set; } = new List<ISpatialItem>();
+        private VirtualCanvas _virtualCanvas;
 
         /// <summary>
         /// Gets the collection of Dynamo-specific preferences.
@@ -568,6 +573,8 @@ namespace Dynamo.ViewModels
             Model = model;
             stateMachine = new StateMachine(this);
 
+            InitializeSpatialItems();
+
             var nodesColl = new CollectionContainer { Collection = Nodes };
             WorkspaceElements.Add(nodesColl);
 
@@ -641,6 +648,23 @@ namespace Dynamo.ViewModels
             //if we've already retrieved flags, grab the value,
             zoomAnimationThresholdFeatureFlagVal = (int)(DynamoModel.FeatureFlags?.CheckFeatureFlag<long>("zoom_opacity_animation_nodenum_threshold", 0) ?? 0);
             SetStopNodeZoomAnimationBehavior(zoomAnimationThresholdFeatureFlagVal);
+        }
+        public void SetVirtualCanvas(VirtualCanvas virtualCanvas)
+        {
+            _virtualCanvas = virtualCanvas;
+        }
+        public void InitializeSpatialItems()
+        {
+            SpatialItems.Clear();
+            foreach (var node in Nodes) SpatialItems.Add(node);
+            foreach (var annotation in Annotations) SpatialItems.Add(annotation);
+            foreach (var note in Notes) SpatialItems.Add(note);
+        }
+
+        public void UpdateSpatialItemsVisibility(Rect bounds)
+        {
+            var itemsToRealize = SpatialItems.Where(item => bounds.IntersectsWith(item.Bounds)).ToList();
+            _virtualCanvas.RealizeItems(itemsToRealize);
         }
 
         private void OnFlagsRetrieved()
@@ -971,6 +995,13 @@ namespace Dynamo.ViewModels
             {
                 Nodes.Add(nodeViewModel);
             }
+
+            SpatialItems.Add(nodeViewModel);
+            if (_virtualCanvas.ActualViewbox.IntersectsWith(nodeViewModel.Bounds))
+            {
+                _virtualCanvas.RealizeItem(nodeViewModel);
+            }
+
             if (nodeViewModel.ErrorBubble != null)
                 Errors.Add(nodeViewModel.ErrorBubble);
 
@@ -1922,8 +1953,6 @@ namespace Dynamo.ViewModels
 
             return foundModels;
         }
-
-        
     }
 
     public class ViewModelEventArgs : EventArgs
@@ -1935,4 +1964,4 @@ namespace Dynamo.ViewModels
         }
     }
 
-    }
+}
